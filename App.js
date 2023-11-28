@@ -5,7 +5,9 @@ import Home from './src/Home.js';
 import Signup from './src/Signup.js';
 import Login from './src/Login.js';
 import EditProfile from './src/EditProfile.js';
-
+import AllUsers from './src/AllUsers';
+import EditUserDetail from './src/EditUserDetail';
+import ForgotPassword from './src/ForgetPassword.js';
 
 
 const Stack = createNativeStackNavigator();
@@ -18,6 +20,9 @@ function App() {
         <Stack.Screen name="Signup" component={Signup} />
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="EditProfile" component={EditProfile} />
+        <Stack.Screen name="AllUsers" component={AllUsers} />
+        <Stack.Screen name="EditUserDetail" component={EditUserDetail} />
+        <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
       </Stack.Navigator>
     </NavigationContainer>
   );
