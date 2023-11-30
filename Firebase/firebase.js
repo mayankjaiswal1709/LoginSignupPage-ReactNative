@@ -1,4 +1,4 @@
-import * as firebase from 'firebase';
-const firebaseConfig={
+// import * as firebase from 'firebase';
+// const firebaseConfig={
     
-}
+// }

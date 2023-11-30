@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -6,20 +6,27 @@ import {
   TouchableOpacity,
   StyleSheet,
   TextInput,
-  Alert, // Added import for Alert
+  Button,
+  ScrollView,
+  Alert,
+  Image,
 } from 'react-native';
+import Btn from './Btn';
+import Images from './assets/arrow.png';
+
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
+import LinearGradient from 'react-native-linear-gradient';
 
-const AllUsers = ({ navigation }) => {
+const AllUsers = ({navigation}) => {
   const [users, setUsers] = useState([]);
   const [newUser, setNewUser] = useState({
-    firstName: '',
-    lastName: '',
+    Name: '',
+    Email: '',
+    DOB: '',
   });
 
   useEffect(() => {
-    // Fetch the list of users from Firestore
     const fetchUsers = async () => {
       const usersSnapshot = await firestore().collection('users').get();
       const usersData = usersSnapshot.docs.map(doc => ({
@@ -33,14 +40,12 @@ const AllUsers = ({ navigation }) => {
   }, []);
 
   const handleEditUser = userId => {
-    navigation.navigate('EditUserDetail', { userId });
+    navigation.navigate('EditUserDetail', {userId});
   };
 
   const handleDeleteUser = async userId => {
     try {
-      // Delete the user from Firestore
       await firestore().collection('users').doc(userId).delete();
-      // Update the local users state
       setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
     } catch (error) {
       console.error('Error deleting user:', error.message);
@@ -49,12 +54,11 @@ const AllUsers = ({ navigation }) => {
 
   const handleCreateUser = async () => {
     try {
-      // Add the new user to Firestore
       const newUserRef = await firestore().collection('users').add(newUser);
       const newUserDoc = await newUserRef.get();
-      const newUserData = { id: newUserRef.id, ...newUserDoc.data() };
+      const newUserData = {id: newUserRef.id, ...newUserDoc.data()};
       setUsers(prevUsers => [...prevUsers, newUserData]);
-      setNewUser({ firstName: '', lastName: '' }); // Clear the form
+      setNewUser({Name: '', Email: ''});
     } catch (error) {
       console.error('Error creating user:', error.message);
     }
@@ -64,7 +68,6 @@ const AllUsers = ({ navigation }) => {
     try {
       await auth().signOut();
 
-      // Show logout alert message
       Alert.alert(
         'Logout',
         'You have successfully logged out.',
@@ -72,44 +75,71 @@ const AllUsers = ({ navigation }) => {
           {
             text: 'OK',
             onPress: () => {
-              // Navigate to the login screen or any other screen you want after logout
               navigation.navigate('Login');
             },
           },
         ],
-        { cancelable: false }
+        {cancelable: false},
       );
     } catch (error) {
       console.error('Error logging out:', error.message);
-      // You may want to import showMessage and handle it here
-      // showMessage({
-      //   message: 'Error logging out',
-      //   type: 'danger',
-      // });
     }
   };
+
   return (
-    <View style={styles.container}>
-      <View style={styles.formContainer}>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.buttonText}>Logout</Text>
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+          <Image
+            source={Images}
+            style={{width: 30, height: 30, marginTop: 10}}
+          />
         </TouchableOpacity>
 
+        <Text style={styles.heading}>All Users</Text>
+
+        <LinearGradient
+          colors={['#FFA500', 'red']}
+          start={{x: 0, y: 0}}
+          end={{x: 1, y: 0}}
+          style={{
+            borderBottomLeftRadius: 100,
+            overflow: 'hidden',
+            height: 50,
+            width: 100,
+          }}>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.buttonText}>LOGOUT</Text>
+          </TouchableOpacity>
+        </LinearGradient>
+      </View>
+
+      <View style={styles.formContainer}>
         <Text style={styles.formHeading}>Create New User</Text>
         <TextInput
           style={styles.input}
-          placeholder="First Name"
-          value={newUser.firstName}
+          placeholder="Name"
+          value={newUser.Name}
           onChangeText={text =>
-            setNewUser(prevUser => ({...prevUser, firstName: text}))
+            setNewUser(prevUser => ({...prevUser, Name: text}))
           }
         />
         <TextInput
           style={styles.input}
-          placeholder="Last Name"
-          value={newUser.lastName}
+          placeholder="Email"
+          value={newUser.Email}
+          keyboardType="email-address"
           onChangeText={text =>
-            setNewUser(prevUser => ({...prevUser, lastName: text}))
+            setNewUser(prevUser => ({...prevUser, Email: text}))
+          }
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="DOB"
+          value={newUser.DOB}
+          keyboardType="email-address"
+          onChangeText={text =>
+            setNewUser(prevUser => ({...prevUser, DOB: text}))
           }
         />
         <TouchableOpacity
@@ -119,61 +149,67 @@ const AllUsers = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.heading}>All Users</Text>
       <FlatList
         data={users}
         keyExtractor={item => item.id}
         renderItem={({item}) => (
           <View style={styles.userContainer}>
-            <Text style={styles.userName}>
-              {item.firstName} {item.lastName}
-            </Text>
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={() => handleEditUser(item.id)}>
-              <Text style={styles.buttonText} st>
-                Edit
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={() => handleDeleteUser(item.id)}>
-              <Text style={styles.buttonText}>Delete</Text>
-            </TouchableOpacity>
+            <Text style={styles.userName}>Name: {item.Name}</Text>
+            <Text style={styles.userName}>Email: {item.Email}</Text>
+            <Text style={styles.userName}>DOB: {item.DOB}</Text>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => handleEditUser(item.id)}>
+                <Text style={styles.buttonText}>Edit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() => handleDeleteUser(item.id)}>
+                <Text style={styles.buttonText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
       />
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  formContainer: {
-    backgroundColor: '#000',
+  container: {
+    flex: 1,
+    backgroundColor: '#daa520',
     padding: 20,
-    borderRadius: 10,
-    marginVertical: 20,
   },
-  userContainer: {
-    backgroundColor: '#000',
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  heading: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    fontFamily: 'monospace',
+  },
+  logoutButton: {
+    backgroundColor: '#e74c3c',
+    padding: 10,
+    borderRadius: 5,
+  },
+  formContainer: {
+    backgroundColor: '#34495e',
     padding: 20,
     borderRadius: 10,
-    marginVertical: 20,
+    marginBottom: 20,
   },
   formHeading: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 10,
-    color: '#fff',
-  },
-  heading: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  userName: {
-    fontWeight: 'bold',
-    marginBottom: 1,
+    fontFamily: 'monospace',
     color: '#fff',
   },
   input: {
@@ -181,40 +217,56 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     marginBottom: 10,
+    color: '#000',
+    fontSize: 15,
   },
   createButton: {
     backgroundColor: '#2ecc71',
     padding: 10,
     borderRadius: 5,
-  },
-  logoutButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: '#e74c3c',
-    padding: 10,
-    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   userContainer: {
-    backgroundColor: '#000',
+    backgroundColor: '#34495e',
     padding: 20,
     borderRadius: 10,
-    marginVertical: 20,
-    flexDirection: 'row', // Make sure the buttons are in a row
-    alignItems: 'center', // Align items vertically in the center
-    justifyContent: 'space-between', // Space out the elements horizontally
+    marginBottom: 20,
   },
-
+  userName: {
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#fff',
+    fontSize: 20,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   editButton: {
-    backgroundColor: '#3498db', // Set a distinct color for the Edit button
+    backgroundColor: '#3498db',
     padding: 10,
-    borderRadius: 5,
+    // borderRadius: 5,
+    borderTopLeftRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 160,
   },
-
   deleteButton: {
-    backgroundColor: '#e74c3c', // Set a distinct color for the Delete button
-    padding: 10,
-    borderRadius: 5,
+    backgroundColor: '#e74c3c',
+    // padding: 10,
+    width: 160,
+    justifyContent: 'center',
+    alignItems: 'center',
+    // borderRadius: 5,
+    borderBottomEndRadius: 25,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    alignContent: 'center',
+    fontSize: 15,
+    justifyContent: 'center',
   },
 });
 
